@@ -32,6 +32,12 @@ async function run() {
         
         const db = client.db("docappoints")
         const appointCollection = db.collection("appoints")
+        const doctorsCollection = db.collection("doctors")
+
+        app.get("/doctors", async(req, res) => {
+            const result = await doctorsCollection.find().toArray();
+            res.json(result);
+        });
 
         app.post("/appoint", async(req, res)=> {
             const appointData = req.body
