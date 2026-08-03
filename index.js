@@ -1,20 +1,21 @@
 const dns = require("node:dns");
 dns.setServers(["8.8.8.8", "8.8.4.4"]);
 
+
 const express = require('express')
 const dotenv = require('dotenv')
 const cors = require('cors')
-
-const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 dotenv.config();
 
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = process.env.MONGODB_URI;
+const PORT = process.env.PORT;
 
 
 const app = express();
-const PORT = process.env.PORT;
 app.use(cors())
 app.use(express.json())
+
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -30,9 +31,9 @@ async function run() {
     try {
         await client.connect();
         
-        const db = client.db("docappoints")
-        const appointCollection = db.collection("appoints")
-        const doctorsCollection = db.collection("doctors")
+        const db = client.db("docappoints");
+        const appointCollection = db.collection("appoints");
+        const doctorsCollection = db.collection("doctors");
 
         app.get("/doctors", async(req, res) => {
             const result = await doctorsCollection.find().toArray();
@@ -41,18 +42,33 @@ async function run() {
 
         app.get("/doctors/:id", async (req, res) => {
             const {id} = req.params;
-            const result = await doctorsCollection.findOne({_id: new ObjectId(id)})
+            const doctorId = new ObjectId(id);
+            const result = await doctorsCollection.findOne({_id: doctorId})
+            res.send(result)
+        })
+
+         app.get("/appoint", async (req, res) => {
+            const result = await appointCollection.find().toArray();
             res.send(result)
         })
 
         app.post("/appoint", async(req, res)=> {
-            const appointData = req.body
-            console.log(appointData);
+            const appointData = req.body;
+            console.log('appointment data', appointData);
             const result = await appointCollection.insertOne(appointData)
-
             res.send(result)
         })
+        app.patch("/appoint/:id", async(req, res)=> {
+            const {id} = req.params;
+            const updatedAppoint = req.body;
 
+            const result = await appointCollection.updateOne(
+                {_id: new ObjectId(id)},
+                {$set: updatedAppoint}
+            )
+            res.send(result)
+        })
+       
 
 
 
